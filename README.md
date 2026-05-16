@@ -1,2 +1,17 @@
 # Connect4
-Connect４のゲームを自作AI対戦で再現する
+
+Terminal Connect Four with a simple AI opponent.
+
+## Build
+
+```sh
+make
+```
+
+## Run
+
+```sh
+./connect4 <rows> <cols>
+```
+
+Minimum size: `6 7`.
