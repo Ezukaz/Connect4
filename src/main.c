@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,7 +68,7 @@ printf("\n\n");
 
 static int column_has_space(const char *grid, int rows, int cols, int col)
 {
-return (grid[col] == EMPTY_CELL && col >= 0 && col < cols && rows > 0);
+return (col >= 0 && col < cols && rows > 0 && grid[col] == EMPTY_CELL);
 }
 
 static int drop_pawn(char *grid, int rows, int cols, int col, char pawn)
@@ -169,6 +170,7 @@ static int choose_ai_column(char *grid, int rows, int cols)
 {
 int col;
 int center;
+int tried;
 
 col = find_winning_column(grid, rows, cols, AI_PAWN);
 if (col >= 0)
@@ -179,9 +181,17 @@ return (col);
 center = cols / 2;
 if (column_has_space(grid, rows, cols, center))
 return (center);
+if (board_is_full(grid, rows, cols))
+return (-1);
 col = rand() % cols;
-while (!column_has_space(grid, rows, cols, col))
+tried = 0;
+while (tried < cols && !column_has_space(grid, rows, cols, col))
+{
 col = (col + 1) % cols;
+tried++;
+}
+if (tried == cols)
+return (-1);
 return (col);
 }
 
@@ -226,17 +236,24 @@ return (column);
 static void play_game(int rows, int cols)
 {
 char *grid;
+size_t grid_size;
 int player_turn;
 int col;
 int row;
 
-grid = malloc((size_t)rows * (size_t)cols);
+if ((size_t)rows > SIZE_MAX / (size_t)cols)
+{
+fprintf(stderr, "Error: grid size is too large.\n");
+exit(EXIT_FAILURE);
+}
+grid_size = (size_t)rows * (size_t)cols;
+grid = malloc(grid_size);
 if (grid == NULL)
 {
 fprintf(stderr, "Error: memory allocation failed.\n");
 exit(EXIT_FAILURE);
 }
-memset(grid, EMPTY_CELL, (size_t)rows * (size_t)cols);
+memset(grid, EMPTY_CELL, grid_size);
 player_turn = rand() % 2;
 printf("%s starts first.\n", player_turn ? "Player" : "AI");
 print_grid(grid, rows, cols);
@@ -257,6 +274,11 @@ break ;
 else
 {
 col = choose_ai_column(grid, rows, cols);
+if (col < 0)
+{
+printf("Draw!\n");
+break ;
+}
 row = drop_pawn(grid, rows, cols, col, AI_PAWN);
 printf("AI plays column %d.\n", col + 1);
 print_grid(grid, rows, cols);

@@ -14,4 +14,4 @@ make
 ./connect4 <rows> <cols>
 ```
 
-Minimum size: `6 7`.
+Minimum size: 6 rows and 7 columns.
